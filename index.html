@@ -112,7 +112,7 @@
         if (key_down && player_y < HEIGHT - player_height)
             player_y += player_speed;
         if (key_space && ready) {
-            apple_juice_counter = 0;
+            star_counter = 0;
             power_up_active = true;
             ready = false;
         }
@@ -126,7 +126,7 @@
         if (power_up_active && power_up_counter > 100) {
             power_up_active = false;
             power_up_counter = 0;
-            apple_juice_counter = 0;
+            star_counter = 0;
             player_speed = 5;
         }
 
@@ -188,7 +188,7 @@
                 player_x < cars[i].x + car_width &&
                 player_x + player_width > cars[i].x) && !power_up_active) {
 
-                // if apple juice is ready, use it
+                // if power is ready, use it
                 if (ready) {
                     star_counter = 0;
                     power_up_active = true;
