@@ -1,0 +1,20 @@
+body {
+    background-color: indigo;
+    background-image: url('./images/stars.png');
+}
+
+canvas {
+    /*
+    width: 50%;
+    height: 80%;
+    width: 800px;
+    height: 675px;
+    */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 7px;
+    background-color: white;
+    border: 5px solid black;
+}

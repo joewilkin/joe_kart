@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link name="viewport" content="width=device-width,
+        intial-scale=1">
+    <link rel="shortcut icon" href="images/sun.png">
+    <title>Joe Kart</title>
+    <link rel="stylesheet" href="stylesheet.css">
+</head>
+
+<body>
+    <div class="container">
+        <canvas id="canvas" width="800" height="675"></canvas>
+    </div>
+</body>
+
+<script type="text/javascript">
+
+
+
+    // Initalize High Score
+    let highscore = 58;
+
+    // Constants
+    let HEIGHT = 675;
+    let WIDTH = 800;
+    let FPS = 60;
+
+    // Load images
+    let player_image = new Image(100, 100);
+    player_image.src = "./images/sun.png";
+    let player_power = new Image(100, 100);
+    player_power.src = "./images/sun-power.png";
+    let donut_image = new Image(75, 75);
+    donut_image.src = "./images/donut.png";
+    let car_image = new Image(100, 100);
+    car_image.src = "./images/car.png";
+    let sun_power_small = new Image(25, 50);
+    sun_power_small.src = "./images/sun_power_small.png";
+    let sun_black = new Image(25, 50);
+    sun_black.src = "./images/sun_black.png";
+
+    // Player
+    let player_width = 20;
+    let player_height = 20;
+    let player_x = (WIDTH - player_width) / 2
+    let player_y = HEIGHT - 100;
+    let player_speed = 5;
+
+    // Donuts
+    let donut_width = 75;
+    let donut_height = 75;
+    let donut_x = Math.random() * (WIDTH - donut_width);
+    let donut_y = 75 + (Math.random() * (HEIGHT - donut_height - 75));
+    let donuts_collected = 0;
+    let donuts_needed_for_enemy = 5;
+
+    // Cars
+    let car_width = 100;
+    let car_height = 100;
+    let cars = [];
+    let car_speed_x = 5;
+    let car_speed_y = 5;
+
+    // Power Up
+    let power_up_active = false;
+    let power_up_duration = 10 * FPS; // 10 seconds
+    let power_up_counter = 0;
+    let star_counter = 0;
+    let ready = false;
+
+    // Score
+    let score = 0;
+
+    // Keys
+    let key_up = false;
+    let key_right = false;
+    let key_down = false;
+    let key_left = false;
+    let key_space = false;
+
+    document.onkeydown = (event) => {
+        if (event.keyCode == 39) key_right = true;
+        else if (event.keyCode == 37) key_left = true;
+        else if (event.keyCode == 38) key_up = true;
+        else if (event.keyCode == 40) key_down = true;
+        else if (event.keyCode == 32) key_space = true;
+    }
+
+    document.onkeyup = (event) => {
+        if (event.keyCode == 39) key_right = false;
+        else if (event.keyCode == 37) key_left = false;
+        else if (event.keyCode == 38) key_up = false;
+        else if (event.keyCode == 40) key_down = false;
+        else if (event.keyCode == 32) key_space = false;
+    }
+
+    // Game Loop
+    function loop() {
+        let ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+        if (key_left && player_x > 0)
+            player_x -= player_speed;
+        if (key_right && player_x < WIDTH - player_width)
+            player_x += player_speed;
+        if (key_up && player_y > 75)
+            player_y -= player_speed;
+        if (key_down && player_y < HEIGHT - player_height)
+            player_y += player_speed;
+        if (key_space && ready) {
+            apple_juice_counter = 0;
+            power_up_active = true;
+            ready = false;
+        }
+
+        // power up logic
+        if (power_up_active) {
+            power_up_counter += .5;
+            player_speed = 7;
+        }
+
+        if (power_up_active && power_up_counter > 100) {
+            power_up_active = false;
+            power_up_counter = 0;
+            apple_juice_counter = 0;
+            player_speed = 5;
+        }
+
+
+        // draw donut image
+        ctx.drawImage(donut_image, donut_x, donut_y);
+
+        // draw player image
+        if (!power_up_active) {
+            ctx.drawImage(player_image, player_x - 40, player_y - 40);
+        } else {
+            ctx.drawImage(player_power, player_x - 40, player_y - 40);
+        }
+
+        // handle collision between player and donut
+        if (player_y < donut_y + donut_height &&
+            player_y + player_height > donut_y &&
+            player_x < donut_x + donut_width &&
+            player_x + player_width > donut_x) {
+
+            score += 1;
+            donut_x = Math.random() * (WIDTH - donut_width);
+            donut_y = 75 + (Math.random() * (HEIGHT - donut_height - 75));
+            let distance = 0;
+            while (distance < 200) {
+                donut_x = Math.random() * (WIDTH - donut_width);
+                donut_y = 75 + (Math.random() * (HEIGHT - donut_height - 75));
+                distance = Math.pow((Math.pow((donut_x - player_x), 2) + Math.pow((donut_y - player_y), 2)), .5);
+            }
+
+            donuts_collected += 1;
+
+            // check if enough donuts are collected to add an enemy
+            if (donuts_collected >= donuts_needed_for_enemy) {
+                donuts_collected = 0;
+                let car_x = player_x;
+                let car_y = player_y;
+                distance = 0;
+                while (distance < 300) {
+                    car_x = Math.random() * (WIDTH - car_width - 6);
+                    car_y = 75 + (Math.random() * (HEIGHT - car_height - 75 - 6));
+                    distance = Math.pow((Math.pow((car_x - player_x), 2) + Math.pow((car_y - player_y), 2)), .5);
+                }
+                cars.push({ "x": car_x, "y": car_y, "velX": car_speed_x, "velY": car_speed_y });
+            }
+        }
+
+        // compute high score
+        if (score > highscore)
+            highscore = score;
+
+        // draw enemies and handle collisions
+        for (let i = 0; i < cars.length; i++) {
+            ctx.drawImage(car_image, cars[i].x, cars[i].y);
+
+            // collision detection between player and car
+            if ((player_y < cars[i].y + car_height &&
+                player_y + player_height > cars[i].y &&
+                player_x < cars[i].x + car_width &&
+                player_x + player_width > cars[i].x) && !power_up_active) {
+
+                // if apple juice is ready, use it
+                if (ready) {
+                    star_counter = 0;
+                    power_up_active = true;
+                    ready = false;
+                } else {
+                    // end the game
+                    location.reload();
+                }
+            }
+
+            // update car movement
+            cars[i].x += cars[i].velX;
+            cars[i].y += cars[i].velY;
+
+            if (cars[i].x <= 0 || cars[i].x >= WIDTH - car_width)
+                cars[i].velX *= -1;
+            if (cars[i].y <= 75 || cars[i].y >= HEIGHT - car_height)
+                cars[i].velY *= -1;
+        }
+
+        // draw menu
+        ctx.fillStyle = "rgb(169, 169, 169)";
+        ctx.fillRect(0, 0, WIDTH, 75);
+
+        // draw score on screen
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.font = "bold 25px Arial";
+        ctx.textAlign = "start";
+        ctx.textBaseline = "top";
+        ctx.fillText(`Score: ${score}`, 10, 10);
+
+        // draw high score on screen
+        ctx.fillText(`High Score: ${highscore}`, 10, 40);
+
+        // draw power up bar
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(300, 22, 406, 31);
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.fillRect(303, 25, 400, 25);
+        ctx.fillStyle = "rgb(75, 0, 130)";
+        ctx.fillRect(303, 25, 2 * star_counter, 25);
+        ctx.fillStyle = "rgb(205, 92, 92)";
+        ctx.fillRect(303, 25, 4 * power_up_counter, 25);
+
+        if (star_counter < 200) {
+            star_counter += .1;
+            ready = false;
+        } else {
+            star_counter = 200;
+            ready = true;
+        }
+
+        // draw power up
+        if (ready || power_up_active) {
+            ctx.drawImage(sun_power_small, 725, 13);
+        } else {
+            ctx.drawImage(sun_black, 725, 13);
+        }
+
+    }
+
+    let canvas = document.getElementById("canvas");
+
+    let timer = setInterval(function () { loop() }, (1000 / FPS));
+
+</script>
+
+</html>
