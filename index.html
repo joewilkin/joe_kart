@@ -20,7 +20,21 @@
 <script type="text/javascript">
 
     // Initalize High Score
-    let highscore = 58;
+    let highscore = 0;
+
+    // get value of high score 
+    fetch("https://joewilkin.github.io/joe_kart/leaderboard.txt")
+        .then((response) => {
+            if (!response.ok) {
+                // leaderboard file not found, or something else happened
+                // response code is not between 200-299
+                console.log("high score could not be fetched")
+            } else {
+                // get contents of leaderboard text file
+                // set highscore to obtained value
+                response.text().then((data) => { highscore = data })
+            }
+        })
 
     // Constants
     let HEIGHT = 675;
